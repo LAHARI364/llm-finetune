@@ -1,15 +1,3 @@
-"""
-train.py
-Fine-tunes a LLM using QLoRA (Quantized Low-Rank Adaptation).
-
-Pipeline:
-  1. Load base model in 4-bit (QLoRA) to save GPU memory
-  2. Attach LoRA adapters to select layers
-  3. Load & tokenize dataset
-  4. Train using HuggingFace's SFTTrainer
-  5. Save the LoRA adapter weights
-"""
-
 import torch
 from datasets import load_dataset
 from transformers import (
@@ -24,39 +12,39 @@ from trl import SFTTrainer
 import config
 
 
-# ── Step 1: Load tokenizer ─────────────────────────────────────────────────
+# Load tokenizer
 def load_tokenizer():
     print(f"Loading tokenizer: {config.BASE_MODEL}")
     tokenizer = AutoTokenizer.from_pretrained(config.BASE_MODEL, trust_remote_code=True)
-    tokenizer.pad_token = tokenizer.eos_token  # required for batching
+    tokenizer.pad_token = tokenizer.eos_token  
     tokenizer.padding_side = "right"
     return tokenizer
 
 
-# ── Step 2: Load model in 4-bit (QLoRA) ────────────────────────────────────
+# Load model in 4-bit (QLoRA)
 def load_model():
     print(f"Loading model in 4-bit: {config.BASE_MODEL}")
 
     bnb_config = BitsAndBytesConfig(
         load_in_4bit=config.USE_4BIT,
-        bnb_4bit_quant_type="nf4",           # NormalFloat4 — best for LLMs
+        bnb_4bit_quant_type="nf4",           
         bnb_4bit_compute_dtype=torch.float16,
-        bnb_4bit_use_double_quant=True,      # extra memory saving
+        bnb_4bit_use_double_quant=True,      
     )
 
     model = AutoModelForCausalLM.from_pretrained(
         config.BASE_MODEL,
         quantization_config=bnb_config,
-        device_map="auto",                   # auto-assigns to GPU/CPU
+        device_map="auto",                   
         trust_remote_code=True,
     )
 
-    # Prepares quantized model for LoRA training
+    
     model = prepare_model_for_kbit_training(model)
     return model
 
 
-# ── Step 3: Attach LoRA adapters ────────────────────────────────────────────
+# Attach LoRA adapter
 def apply_lora(model):
     print(f"Applying LoRA adapters (r={config.LORA_R}, alpha={config.LORA_ALPHA})")
 
@@ -70,11 +58,11 @@ def apply_lora(model):
     )
 
     model = get_peft_model(model, lora_config)
-    model.print_trainable_parameters()  # shows how few params we're actually training
+    model.print_trainable_parameters()
     return model
 
 
-# ── Step 4: Load dataset ────────────────────────────────────────────────────
+# Load dataset
 def load_data():
     print(f"Loading dataset from {config.TRAIN_FILE}")
     dataset = load_dataset("json", data_files=config.TRAIN_FILE, split="train")
@@ -82,7 +70,7 @@ def load_data():
     return dataset
 
 
-# ── Step 5: Train ───────────────────────────────────────────────────────────
+#Train
 def train(model, tokenizer, dataset):
     training_args = TrainingArguments(
         output_dir=config.OUTPUT_DIR,
@@ -94,9 +82,9 @@ def train(model, tokenizer, dataset):
         lr_scheduler_type=config.LR_SCHEDULER,
         save_steps=config.SAVE_STEPS,
         logging_steps=config.LOGGING_STEPS,
-        fp16=True,                    # mixed precision for speed
-        optim="adamw_torch",     # memory-efficient optimizer for QLoRA
-        report_to="none",             # set "wandb" to enable experiment tracking
+        fp16=True,                    
+        optim="adamw_torch",     
+        report_to="none",            
     )
 
     trainer = SFTTrainer(
@@ -111,7 +99,7 @@ def train(model, tokenizer, dataset):
     return trainer
 
 
-# ── Step 6: Save adapter weights ────────────────────────────────────────────
+#save adapter weights
 def save_model(trainer, tokenizer):
     save_path = f"{config.OUTPUT_DIR}/final_adapter"
     trainer.model.save_pretrained(save_path)
@@ -119,7 +107,7 @@ def save_model(trainer, tokenizer):
     print(f"💾 Adapter saved to {save_path}")
 
 
-# ── Main ─────────────────────────────────────────────────────────────────────
+# Main
 if __name__ == "__main__":
     tokenizer = load_tokenizer()
     model     = load_model()
