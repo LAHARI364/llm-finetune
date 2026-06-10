@@ -1,13 +1,9 @@
-"""
-evaluate.py
-Computes ROUGE scores to evaluate how well the fine-tuned model performs.
-ROUGE is a standard metric for text generation tasks.
-"""
+
 
 from rouge_score import rouge_scorer
 from inference import load_finetuned_model, generate_response
 
-# Ground-truth examples to evaluate against
+
 EVAL_DATA = [
     {
         "instruction": "What is machine learning?",
