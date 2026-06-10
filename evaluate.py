@@ -1,5 +1,3 @@
-
-
 from rouge_score import rouge_scorer
 from inference import load_finetuned_model, generate_response
 
