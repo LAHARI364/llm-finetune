@@ -1,9 +1,3 @@
-"""
-inference.py
-Loads the fine-tuned LoRA adapter and runs inference.
-Use this to test your model after training.
-"""
-
 import torch
 from transformers import AutoModelForCausalLM, AutoTokenizer, pipeline
 from peft import PeftModel
@@ -32,7 +26,7 @@ def load_finetuned_model():
 
 
 def generate_response(model, tokenizer, instruction: str, user_input: str = ""):
-    """Format prompt and generate a response."""
+    
     if user_input:
         prompt = (
             f"### Instruction:\n{instruction}\n\n"
