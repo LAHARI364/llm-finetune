@@ -1,8 +1,4 @@
-"""
-data/prepare_dataset.py
-Generates a sample instruction-following dataset (Q&A format).
-Replace this with your own data in the same format for real use.
-"""
+
 
 import json
 import os
@@ -51,7 +47,7 @@ SAMPLE_DATA = [
 ]
 
 def format_prompt(example):
-    """Alpaca-style prompt format used by most instruction-tuned models."""
+  
     if example["input"]:
         return (
             f"### Instruction:\n{example['instruction']}\n\n"
@@ -68,7 +64,7 @@ def prepare_and_save():
 
     formatted = [{"text": format_prompt(ex)} for ex in SAMPLE_DATA]
 
-    # Save as JSONL (one JSON object per line — standard for LLM training)
+    
     with open("data/train.jsonl", "w") as f:
         for item in formatted:
             f.write(json.dumps(item) + "\n")
